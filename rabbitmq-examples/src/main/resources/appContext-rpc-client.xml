@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans 
+	xmlns="http://www.springframework.org/schema/beans"
+	xmlns:beans="http://www.springframework.org/schema/beans" 
+	xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util" 
+	xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                        http://www.springframework.org/schema/rabbit http://www.springframework.org/schema/rabbit/spring-rabbit.xsd
+                        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+                        http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+
+	<import resource="classpath:/appContext-rpc-common.xml" />
+
+    <rabbit:template id="rabbitTemplate" connection-factory="rabbitConnectionFactory" reply-timeout="300000"
+        message-converter="serializerMessageConverter" queue="${rabbitmq.queue.rpc.requests}" 
+        reply-queue="${rabbitmq.queue.rpc.replies}">
+        <rabbit:reply-listener />
+    </rabbit:template>
+
+	<bean id="messagingService" class="com.introfocus.examples.rabbitmq.service.impl.DefaultMessagingService">
+		<property name="rpcRequestsQueue" value="${rabbitmq.queue.rpc.requests}" />
+        <property name="backgroundRequestsQueue" value="${rabbitmq.queue.background.requests}" />
+	</bean>
+
+</beans>
+
+

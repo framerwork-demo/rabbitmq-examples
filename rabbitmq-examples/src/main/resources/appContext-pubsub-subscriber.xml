@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	   		http://www.springframework.org/schema/beans/spring-beans.xsd 
+	   		http://www.springframework.org/schema/rabbit 
+	   		http://www.springframework.org/schema/rabbit/spring-rabbit-1.1.xsd
+	   		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd ">
+
+	<import resource="classpath:/appContext-pubsub-common.xml" />
+
+    <!-- Create a queue with a randomized name -->
+    <rabbit:queue id="temporaryQueue" auto-delete="true" />
+
+    <!-- Bind to an exchange -->
+    <rabbit:fanout-exchange name="${exchange.name}">
+        <rabbit:bindings>
+            <rabbit:binding queue="temporaryQueue" />
+        </rabbit:bindings>
+    </rabbit:fanout-exchange>
+
+	<!-- Listen to messages on the temporary queue -->
+    <bean id="incomingDataBatchListenerContainer" class="org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer">
+        <property name="connectionFactory" ref="rabbitConnectionFactory" />
+        <property name="messageListener">
+            <bean class="com.introfocus.examples.rabbitmq.adapter.NonReplyingMessageListenerAdapter">
+                <property name="defaultListenerMethod" value="handleRequest" />
+                <property name="delegate" ref="messageHandler" />
+            </bean>
+        </property>
+        <property name="concurrentConsumers" value="10" />
+        <property name="queues">
+            <list>
+                <ref bean="temporaryQueue" />
+            </list>
+        </property>
+    </bean>
+
+    <bean id="messageHandler" class="com.introfocus.examples.rabbitmq.handler.impl.DefaultMessageHandler" />
+
+</beans>

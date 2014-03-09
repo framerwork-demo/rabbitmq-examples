@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans 
+	xmlns="http://www.springframework.org/schema/beans"
+	xmlns:beans="http://www.springframework.org/schema/beans" 
+	xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util" 
+	xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                        http://www.springframework.org/schema/rabbit http://www.springframework.org/schema/rabbit/spring-rabbit.xsd
+                        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+                        http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+
+
+	<!-- Configuration common for both client/server -->
+	<context:annotation-config />
+
+	<context:component-scan base-package="com.introfocus.examples.rabbitmq.examples.rabbitmq" />
+
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <value>classpath:/rabbitmq-examples.properties</value>
+            </list>
+        </property>
+    </bean>
+
+	<!-- Provides connection to the RabbitMQ broker -->
+	<bean id="rabbitConnectionFactory" class="org.springframework.amqp.rabbit.connection.CachingConnectionFactory"
+		p:username="${rabbitmq.username}" p:password="${rabbitmq.password}">
+        <constructor-arg value="${rabbitmq.ip.address}" type="String" />
+        <constructor-arg value="${rabbitmq.port}" type="int"/>
+	</bean>
+
+	<rabbit:queue id="rpcRequestQueue" name="${rabbitmq.queue.rpc.requests}" durable="true" />
+	<rabbit:queue id="rpcReplyQueue" name="${rabbitmq.queue.rpc.replies}" durable="true" />
+
+	<rabbit:queue id="backgroundRequestQueue" name="${rabbitmq.queue.background.requests}" durable="true" />
+
+    <rabbit:admin id="amqpAdmin" connection-factory="rabbitConnectionFactory" auto-startup="true" />
+    
+
+	<!-- Use Java serialization when sending messages -->
+    <bean id="serializerMessageConverter" class="org.springframework.amqp.support.converter.SerializerMessageConverter" />
+
+</beans>
+
+
